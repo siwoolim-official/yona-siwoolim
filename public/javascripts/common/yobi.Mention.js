@@ -29,6 +29,7 @@ yobi.Mention = function(htOptions) {
      * @param {Hash Table} htOptions
      */
     function _init(htOptions){
+        console.log("yobi.Mention 초기화 시작", htOptions); // 이 로그가 찍히는지 확인
         _initVar(htOptions);
         _initElement();
         _attachEvent();
@@ -40,6 +41,7 @@ yobi.Mention = function(htOptions) {
      * @param {Hash Table} htOptions
      */
     function _initVar(htOptions) {
+        console.log("aaaa");
         htVar = htOptions || {}; // set htVar as htOptions
         htVar.doesNotDataLoaded = true;
         htVar.nKeyupEventGenerator = null;
@@ -78,7 +80,8 @@ yobi.Mention = function(htOptions) {
         eEvt = eEvt || window.event;
 
         var charCode = eEvt.which || eEvt.keyCode;
-        if(charCode === 64 || charCode === 35 || charCode === 58) { // 64 = @, 35 = #, 58 = :
+        console.log(charCode);
+        if(charCode === 64 || charCode === 35 || charCode === 58 || charCode === 36) { // 64 = @, 35 = #, 58 = :, 36 = $
             if(htVar.doesNotDataLoaded) {
                 _findMentionList();
             }
@@ -216,6 +219,45 @@ yobi.Mention = function(htOptions) {
             })
             .atwho({
                 at: "#",
+                limit: 10,
+                displayTpl: "<li data-value='#${issueNo}'><small>#${issueNo}</small> ${title}</li>",
+                suspendOnComposing: false,
+                insertTpl: "#${issueNo}",
+                callbacks: {
+                    remoteFilter: function(query, callback) {
+                        NProgress.start();
+                        $.getJSON(htVar.url, {query: query, mentionType: "issue"}, function(data) {
+                            NProgress.done();
+                            callback(data.result)
+                        });
+                    },
+                    sorter: function(query, items, searchKey) {
+                        var item, i, len, results;
+                        if (!query) {
+                            return items;
+                        }
+                        results = [];
+                        for (i = 0, len = items.length; i < len; i++) {
+                            item = items[i];
+
+                            if (item.issueNo === query) {
+                                item.atwhoOrder = 0;
+                            } else {
+                                var issueNoIndexOf = item.issueNo.toLowerCase().indexOf(query.toLowerCase());
+                                item.atwhoOrder = i + 1
+                                    + Math.pow(10, issueNoIndexOf)
+                                    + ((issueNoIndexOf > -1) ? 0 : Math.pow(100, item.title.toLowerCase().indexOf(query.toLowerCase())));
+                            }
+                            results.push(item);
+                        }
+                        return results.sort(function(a, b) {
+                            return a.atwhoOrder - b.atwhoOrder;
+                        });
+                    }
+                }
+            })
+            .atwho({
+                at: "$",
                 limit: 10,
                 displayTpl: "<li data-value='#${issueNo}'><small>#${issueNo}</small> ${title}</li>",
                 suspendOnComposing: false,
