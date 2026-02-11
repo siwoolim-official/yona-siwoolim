@@ -1,6 +1,11 @@
 import com.typesafe.config._
 import java.nio.file.Paths
 
+resolvers ++= Seq(
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+  "Maven Central" at "https://repo1.maven.org/maven2/"
+)
+
 name := """yona"""
 
 version := "1.16.0"
@@ -33,7 +38,7 @@ libraryDependencies ++= Seq(
   // svnkit
   "org.tmatesoft.svnkit" % "svnkit" % "1.9.3",
   // svnkit-dav
-  "sonia.svnkit" % "svnkit-dav" % "1.8.15-scm1",
+//  "sonia.svnkit" % "svnkit-dav" % "1.8.15 -scm1",
   // javahl
   "net.sourceforge.jexcelapi" % "jxl" % "2.6.10",
 // shiro
