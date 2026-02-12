@@ -8,10 +8,7 @@
 package utils;
 
 import controllers.UserApp;
-import models.Issue;
-import models.Organization;
-import models.Project;
-import models.User;
+import models.*;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -52,12 +49,17 @@ import java.util.regex.Pattern;
 public class AutoLinkRenderer {
     private static final String PATH_PATTERN_STR = "[a-zA-Z0-9-_.가-힣/]+";
     private static final String ISSUE_PATTERN_STR = "\\d+";
+    private static final String POST_PATTERN_STR = "\\d+";
     private static final String SHA_PATTERN_STR = "[a-f0-9]{7,40}";
 
     private static final Pattern PATH_WITH_ISSUE_PATTERN = Pattern.compile("@?(" + PATH_PATTERN_STR + ")#(" + ISSUE_PATTERN_STR + ")");
     private static final Pattern ISSUE_PATTERN = Pattern.compile("#(" + ISSUE_PATTERN_STR + ")");
 
-    private static final Pattern PATH_WITH_SHA_PATTERN = Pattern.compile("(" + PATH_PATTERN_STR + ")@?(" + SHA_PATTERN_STR + ")");
+    private static final Pattern PATH_WITH_POST_PATTERN = Pattern.compile("@?(" + PATH_PATTERN_STR + ")\\$(" + POST_PATTERN_STR + ")");
+    private static final Pattern POST_PATTERN = Pattern.compile("\\$(" + POST_PATTERN_STR + ")");
+
+    private static final Pattern PATH_WITH_SHA_PATTERN = Pattern.compile(
+            "(" + PATH_PATTERN_STR + ")@?(" + SHA_PATTERN_STR + ")");
     private static final Pattern SHA_PATTERN = Pattern.compile("@?(" + SHA_PATTERN_STR + ")");
 
     private static final Pattern LOGIN_ID_PATTERN_ALLOW_FORWARD_SLASH_PATTERN = Pattern.compile("@(" + PATH_PATTERN_STR + ")");
@@ -128,6 +130,24 @@ public class AutoLinkRenderer {
             @Override
             public Link toLink(Matcher matcher) {
                 return toValidIssueLink(StringUtils.EMPTY, project, matcher.group(1));
+            }
+        });
+
+        parse(PATH_WITH_POST_PATTERN, new ToLink() {
+            @Override
+            public Link toLink(Matcher matcher) {
+                String path = matcher.group(1);
+                String issueNumber = matcher.group(2);
+
+                Project project = getProjectFromPath(path);
+                return toValidPostLink(path, project, issueNumber);
+            }
+        });
+
+        parse(POST_PATTERN, new ToLink() {
+            @Override
+            public Link toLink(Matcher matcher) {
+                return toValidPostLink(StringUtils.EMPTY, project, matcher.group(1));
             }
         });
 
@@ -212,7 +232,8 @@ public class AutoLinkRenderer {
             Link link = toLink.toLink(matcher);
 
             if (link.isValid()) {
-                matcher.appendReplacement(sb, link.toString());
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(link.toString()));
+//                matcher.appendReplacement(sb, link.toString());
             }
         }
 
@@ -259,6 +280,29 @@ public class AutoLinkRenderer {
                         + Messages.get("issue.state." + issue.state.state()) + "</span>";
 
                 return new Link(RouteUtil.getUrl(issue), "issueLink", prefix + linkText);
+            }
+        }
+
+        return Link.EMPTY_LINK;
+    }
+
+    private Link toValidPostLink(String prefix, Project project, String postNumber) {
+        if (project != null) {
+            Posting posting = Posting.findByNumber(project, Long.parseLong(postNumber));
+
+            if (posting != null) {
+                /**
+                 * CSS class name of a link to specific issue is 'issueLink'.
+                 * CSS class name can enable to show the quick view of issue.
+                 */
+                String linkText = "$" + postNumber + "." + posting.title;
+                if (StringUtils.isNotEmpty(prefix)) {
+                    linkText += prefix + linkText;
+                }
+
+                linkText = "["+ prefix + linkText + "]";
+
+                return new Link(RouteUtil.getUrl(posting), "postLink", prefix + linkText);
             }
         }
 

@@ -41,7 +41,6 @@ yobi.Mention = function(htOptions) {
      * @param {Hash Table} htOptions
      */
     function _initVar(htOptions) {
-        console.log("aaaa");
         htVar = htOptions || {}; // set htVar as htOptions
         htVar.doesNotDataLoaded = true;
         htVar.nKeyupEventGenerator = null;
@@ -259,13 +258,13 @@ yobi.Mention = function(htOptions) {
             .atwho({
                 at: "$",
                 limit: 10,
-                displayTpl: "<li data-value='#${issueNo}'><small>#${issueNo}</small> ${title}</li>",
+                displayTpl: "<li data-value='$${postNo}'><small>$${postNo}</small> ${title}</li>",
                 suspendOnComposing: false,
-                insertTpl: "#${issueNo}",
+                insertTpl: "$${postNo}",
                 callbacks: {
                     remoteFilter: function(query, callback) {
                         NProgress.start();
-                        $.getJSON(htVar.url, {query: query, mentionType: "issue"}, function(data) {
+                        $.getJSON(htVar.url, {query: query, mentionType: "post"}, function(data) {
                             NProgress.done();
                             callback(data.result)
                         });
@@ -279,13 +278,13 @@ yobi.Mention = function(htOptions) {
                         for (i = 0, len = items.length; i < len; i++) {
                             item = items[i];
 
-                            if (item.issueNo === query) {
+                            if (item.postNo === query) {
                                 item.atwhoOrder = 0;
                             } else {
-                                var issueNoIndexOf = item.issueNo.toLowerCase().indexOf(query.toLowerCase());
+                                var postNoIndexOf = item.postNo.toLowerCase().indexOf(query.toLowerCase());
                                 item.atwhoOrder = i + 1
-                                    + Math.pow(10, issueNoIndexOf)
-                                    + ((issueNoIndexOf > -1) ? 0 : Math.pow(100, item.title.toLowerCase().indexOf(query.toLowerCase())));
+                                    + Math.pow(10, postNoIndexOf)
+                                    + ((postNoIndexOf > -1) ? 0 : Math.pow(100, item.title.toLowerCase().indexOf(query.toLowerCase())));
                             }
                             results.push(item);
                         }

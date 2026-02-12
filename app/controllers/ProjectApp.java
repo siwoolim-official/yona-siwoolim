@@ -64,7 +64,7 @@ import static utils.TemplateHelper.*;
 @AnonymousCheck
 public class ProjectApp extends Controller {
 
-    private static final int ISSUE_MENTION_SHOW_LIMIT = 20;
+    private static final int INTER_MENTION_SHOW_LIMIT = 20;
 
     private static final int MAX_FETCH_PROJECTS = 1000;
 
@@ -416,6 +416,12 @@ public class ProjectApp extends Controller {
             result.put("result", getIssueList(project, query));
         }
 
+        if("post".equalsIgnoreCase(mentionType)) {
+            result.put("result", getPostList(project, query));
+        }
+
+        List<Map<String, String>> a = result.get("result");
+
         return ok(toJson(result));
     }
 
@@ -423,6 +429,12 @@ public class ProjectApp extends Controller {
         List<Map<String, String>> mentionListOfIssues = new ArrayList<>();
         collectedIssuesToMap(mentionListOfIssues, getMentionIssueList(project, query));
         return mentionListOfIssues;
+    }
+
+    private static List<Map<String, String>> getPostList(Project project, String query) {
+        List<Map<String, String>> mentionListOfPosts = new ArrayList<>();
+        collectedPostsToMap(mentionListOfPosts, getMentionPostList(project, query));
+        return mentionListOfPosts;
     }
 
     private static List<Map<String, String>> getUserList(Project project, List<User> userList) {
@@ -479,12 +491,23 @@ public class ProjectApp extends Controller {
         }
     }
 
+    private static void collectedPostsToMap(List<Map<String, String>> mentionList,
+                                             List<Posting> postList) {
+        for (Posting post : postList) {
+            Map<String, String> projectPostMap = new HashMap<>();
+            projectPostMap.put("name", post.getNumber().toString() + post.title);
+            projectPostMap.put("postNo", post.getNumber().toString());
+            projectPostMap.put("title", post.title);
+            mentionList.add(projectPostMap);
+        }
+    }
+
     private static List<Issue> getMentionIssueList(Project project, String query) {
         if (StringUtils.isEmpty(query)) {
             return Issue.finder.where()
                     .eq("project.id", project.isForkedFromOrigin() ? project.originalProject.id : project.id)
                     .orderBy("createdDate desc")
-                    .setMaxRows(ISSUE_MENTION_SHOW_LIMIT)
+                    .setMaxRows(INTER_MENTION_SHOW_LIMIT)
                     .findList();
         }
         return Issue.finder.where()
@@ -492,7 +515,24 @@ public class ProjectApp extends Controller {
                 .or(ilike("title", "%" + query + "%"),
                         ilike("number", query + "%"))
                 .orderBy("createdDate desc")
-                .setMaxRows(ISSUE_MENTION_SHOW_LIMIT)
+                .setMaxRows(INTER_MENTION_SHOW_LIMIT)
+                .findList();
+    }
+
+    private static List<Posting> getMentionPostList(Project project, String query) {
+        if (StringUtils.isEmpty(query)) {
+            return Posting.finder.where()
+                    .eq("project.id", project.isForkedFromOrigin() ? project.originalProject.id : project.id)
+                    .orderBy("createdDate desc")
+                    .setMaxRows(INTER_MENTION_SHOW_LIMIT)
+                    .findList();
+        }
+        return Posting.finder.where()
+                .eq("project.id", project.isForkedFromOrigin() ? project.originalProject.id : project.id)
+                .or(ilike("title", "%" + query + "%"),
+                        ilike("number", query + "%"))
+                .orderBy("createdDate desc")
+                .setMaxRows(INTER_MENTION_SHOW_LIMIT)
                 .findList();
     }
 
