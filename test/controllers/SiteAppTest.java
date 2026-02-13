@@ -56,7 +56,6 @@ public class SiteAppTest {
         data.put("loginId", loginId);
         User admin = User.find.byId(1L);
 
-        System.out.println(User.findByLoginId(loginId).state);
         //When
 
         Result result = callAction(

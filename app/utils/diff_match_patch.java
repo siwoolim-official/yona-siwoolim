@@ -804,7 +804,7 @@ public class diff_match_patch {
                 length_changes2 += thisDiff.text.length();
                 if (lastequality != null && (lastequality.length() <= length_changes1)
                         && (lastequality.length() <= length_changes2)) {
-                    //System.out.println("Splitting: '" + lastequality + "'");
+
                     // Walk back to offending equality.
                     while (thisDiff != equalities.lastElement()) {
                         thisDiff = pointer.previous();
@@ -1044,7 +1044,7 @@ public class diff_match_patch {
                         || ((lastequality.length() < Diff_EditCost / 2)
                         && ((pre_ins ? 1 : 0) + (pre_del ? 1 : 0)
                         + (post_ins ? 1 : 0) + (post_del ? 1 : 0)) == 3))) {
-                    //System.out.println("Splitting: '" + lastequality + "'");
+
                     // Walk back to offending equality.
                     while (thisDiff != equalities.lastElement()) {
                         thisDiff = pointer.previous();
@@ -1188,7 +1188,7 @@ public class diff_match_patch {
             }
             thisDiff = pointer.hasNext() ? pointer.next() : null;
         }
-        // System.out.println(diff);
+
         if (diffs.getLast().text.length() == 0) {
             diffs.removeLast();  // Remove the dummy entry at the end.
         }

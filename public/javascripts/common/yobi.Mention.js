@@ -29,7 +29,6 @@ yobi.Mention = function(htOptions) {
      * @param {Hash Table} htOptions
      */
     function _init(htOptions){
-        console.log("yobi.Mention 초기화 시작", htOptions); // 이 로그가 찍히는지 확인
         _initVar(htOptions);
         _initElement();
         _attachEvent();

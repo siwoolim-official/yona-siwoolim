@@ -145,9 +145,17 @@ public class Markdown {
 
             try {
                 URI uri = new URI(href);
-
-                if (href.startsWith("/") || uri.getHost() != null && uri.getHost().startsWith(hostname)
-                        && StringUtils.equals(linkText, href)) {
+                String host = uri.getHost();
+                // TODO: 운영 서버의 hostName을 확인해봐야함. 현재 알수 없음.
+                boolean isTargetHost = host != null && (
+                        host.startsWith(hostname) ||
+                                host.equals("localhost") ||
+                                host.equals("127.0.0.1")
+                );
+                System.out.println(isTargetHost);
+//                href.startsWith("/") || uri.getHost() != null && uri.getHost().startsWith(hostname)
+//                        && StringUtils.equals(linkText, href)
+                if (href.startsWith("/") || (isTargetHost && StringUtils.equals(linkText, href))) {
                     el.attr("rel", el.attr("rel") + " noreferrer");
 
 //                    if (extractIssueLink(el, uri)) break; // 원본 코드
@@ -190,7 +198,7 @@ public class Markdown {
         // link text를 이슈 번호와 제목으로 변경
         // 만약 코멘트까지 지정되어 있다면 이슈번호#코멘트id 로 표시
 
-        Pattern pattern = Pattern.compile("/issue/\\d+");
+        Pattern pattern = Pattern.compile("/issue/\\d+$");
         Matcher matcher = pattern.matcher(uri.getPath());
 
         if (matcher.find()) {
@@ -244,7 +252,7 @@ public class Markdown {
         // link text를 이슈 번호와 제목으로 변경
         // 만약 코멘트까지 지정되어 있다면 이슈번호#코멘트id 로 표시
 
-        Pattern pattern = Pattern.compile("/post/\\d+");
+        Pattern pattern = Pattern.compile("/post/\\d+$");
         Matcher matcher = pattern.matcher(uri.getPath());
 
         if (matcher.find()) {
@@ -258,6 +266,15 @@ public class Markdown {
                     String owner = s[s.length - 2];
                     String projectName = s[s.length - 1];
                     long number = Long.parseLong(segments[1]);
+
+
+                    // TODO: 어떤 UI/UX가 맞는지는 고민
+//                    String numberString = segments[1];
+//                    int slashIndex = numberString.indexOf("/"); // post/7/edit와 같이 뒤에 경로가 있는지 검사
+//                    if (slashIndex > -1) {
+//                        numberString = numberString.substring(0, slashIndex);
+//                    }
+//                    long number = Long.parseLong(numberString);
 
                     Project project = Project.findByOwnerAndProjectName(owner, projectName);
                     Posting post = Posting.findByNumber(project, number);
